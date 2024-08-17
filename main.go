@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"maps"
 	"os"
+	"slices"
 )
 
 func main() {
@@ -31,7 +33,7 @@ func main() {
 	crawlPage(baseURL, baseURL, pages)
 
 	log.Print("crawling finished")
-	for page, count := range pages {
-		log.Printf("%s: %d", page, count)
+	for _, page := range slices.Sorted(maps.Keys(pages)) {
+		log.Printf("%s: %d", page, pages[page])
 	}
 }
