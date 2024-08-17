@@ -24,8 +24,16 @@ func TestNormalizeURL(t *testing.T) {
 			args: args{url: "https://blog.boot.dev/path?q=value&sort=asc"},
 			want: "blog.boot.dev/path",
 		}, {
+			name: "remove query params and trailing slash",
+			args: args{url: "https://blog.boot.dev/path/?q=value&sort=asc"},
+			want: "blog.boot.dev/path",
+		}, {
 			name: "remove fragments",
 			args: args{url: "https://blog.boot.dev/path#hash"},
+			want: "blog.boot.dev/path",
+		}, {
+			name: "remove fragments and trailing slash",
+			args: args{url: "https://blog.boot.dev/path/#hash"},
 			want: "blog.boot.dev/path",
 		}, {
 			name: "remove username and password",
