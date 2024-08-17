@@ -2,10 +2,8 @@ package main
 
 import (
 	"log"
-	"maps"
 	"net/url"
 	"os"
-	"slices"
 	"strconv"
 	"sync"
 )
@@ -58,7 +56,5 @@ func main() {
 
 	log.Print("crawling finished")
 
-	for _, page := range slices.Sorted(maps.Keys(cfg.pages)) {
-		log.Printf("%s: %d", page, cfg.pages[page])
-	}
+	printReport(cfg.pages, cfg.rawBaseURL)
 }
