@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"maps"
+	"net/url"
 	"os"
 	"slices"
+	"sync"
 )
 
 func main() {
@@ -19,21 +21,36 @@ func main() {
 		os.Exit(1)
 	}
 
-	file, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	// file, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	// if err != nil {
+	// 	log.Fatalf("unable to open log.txt: %v", err)
+	// 	os.Exit(1)
+	// }
+	// defer file.Close()
+	// log.SetOutput(file)
+
+	baseURL, err := url.Parse(args[0])
 	if err != nil {
-		log.Fatalf("unable to open log.txt: %v", err)
+		log.Fatalf("invalid base url %s: %v", args[0], err)
 		os.Exit(1)
 	}
-	defer file.Close()
-	log.SetOutput(file)
 
-	baseURL := args[0]
-	pages := make(map[string]int)
+	cfg := config{
+		pages:              make(map[string]int),
+		baseURL:            baseURL,
+		rawBaseURL:         args[0],
+		mu:                 &sync.Mutex{},
+		concurrencyControl: make(chan struct{}, 10),
+		wg:                 &sync.WaitGroup{},
+	}
 
-	crawlPage(baseURL, baseURL, pages)
+	cfg.crawlPage(args[0])
+
+	cfg.wg.Wait()
 
 	log.Print("crawling finished")
-	for _, page := range slices.Sorted(maps.Keys(pages)) {
-		log.Printf("%s: %d", page, pages[page])
+
+	for _, page := range slices.Sorted(maps.Keys(cfg.pages)) {
+		log.Printf("%s: %d", page, cfg.pages[page])
 	}
 }
