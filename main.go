@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"slices"
+	"strconv"
 	"sync"
 )
 
@@ -16,22 +17,28 @@ func main() {
 		os.Exit(1)
 	}
 
-	if len(args) > 1 {
+	if len(args) > 3 {
 		log.Println("too many arguments provided")
 		os.Exit(1)
 	}
 
-	// file, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	// if err != nil {
-	// 	log.Fatalf("unable to open log.txt: %v", err)
-	// 	os.Exit(1)
-	// }
-	// defer file.Close()
-	// log.SetOutput(file)
+	log.SetOutput(os.Stdout)
 
 	baseURL, err := url.Parse(args[0])
 	if err != nil {
 		log.Fatalf("invalid base url %s: %v", args[0], err)
+		os.Exit(1)
+	}
+
+	maxConcurrency, err := strconv.Atoi(args[1])
+	if err != nil {
+		log.Fatalf("invalid max concurrency %s: %v", args[1], err)
+		os.Exit(1)
+	}
+
+	maxPages, err := strconv.Atoi(args[2])
+	if err != nil {
+		log.Fatalf("invalid max pages %s: %v", args[2], err)
 		os.Exit(1)
 	}
 
@@ -40,8 +47,9 @@ func main() {
 		baseURL:            baseURL,
 		rawBaseURL:         args[0],
 		mu:                 &sync.Mutex{},
-		concurrencyControl: make(chan struct{}, 10),
+		concurrencyControl: make(chan struct{}, maxConcurrency),
 		wg:                 &sync.WaitGroup{},
+		maxPages:           maxPages,
 	}
 
 	cfg.crawlPage(args[0])
