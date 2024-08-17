@@ -1,28 +1,37 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 )
 
 func main() {
 	args := os.Args[1:]
 	if len(args) == 0 {
-		fmt.Println("no website provided")
+		log.Println("no website provided")
 		os.Exit(1)
 	}
 
 	if len(args) > 1 {
-		fmt.Println("too many arguments provided")
+		log.Println("too many arguments provided")
 		os.Exit(1)
 	}
+
+	file, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatalf("unable to open log.txt: %v", err)
+		os.Exit(1)
+	}
+	defer file.Close()
+	log.SetOutput(file)
 
 	baseURL := args[0]
-	html, err := getHTML(baseURL)
-	if err != nil {
-		fmt.Printf("unable to fetch html from %s: %v", baseURL, err)
-		os.Exit(1)
-	}
+	pages := make(map[string]int)
 
-	fmt.Printf("%s\n", html)
+	crawlPage(baseURL, baseURL, pages)
+
+	log.Print("crawling finished")
+	for page, count := range pages {
+		log.Printf("%s: %d", page, count)
+	}
 }
